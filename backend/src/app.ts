@@ -3,6 +3,7 @@ import cors from "cors";
 import { UserRouter } from "./app/modules/user/user.route";
 import { PostRouter } from "./app/modules/post/post.route";
 import { NotificationRouter } from "./app/modules/notification/notification.route";
+import { MinioRouter } from "./app/modules/minio/minio.route";
 
 const app: Application = express();
 
@@ -14,6 +15,7 @@ app.use(cors());
 app.use("/user", UserRouter);
 app.use("/post", PostRouter);
 app.use("/notification", NotificationRouter);
+app.use("/minio-bucket", MinioRouter);
 
 // req.params
 // req.query
