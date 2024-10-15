@@ -7,7 +7,7 @@ const MinioControllers = require('./minio.controller');
 const upload = multer({ dest: 'uploads/' });
 
 // Define routes
-router.post('/upload', MinioControllers.uploadFile);
+router.post('/upload', upload.single('file'), MinioControllers.uploadFile);
 router.get('/download/:fileName', MinioControllers.downloadFile);
 
 export const MinioRouter = router;
