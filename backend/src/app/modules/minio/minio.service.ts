@@ -1,14 +1,22 @@
 import minioClient from "./minio.client";
 const fs = require("fs");
+const crypto = require("crypto");
+const path = require("path");
 
 // Function to upload file to MinIO
 const uploadFileToMinIO = (bucketName: string, file: any) => {
   return new Promise((resolve, reject) => {
+    // generating random unique id and renaming the file
+    const uniqueId = crypto.randomUUID();
+    const newFileName = `${uniqueId}-${file.originalname}`;
+    const newFilePath = path.join(path.dirname(file.path), newFileName);
+    fs.renameSync(file.path, newFilePath);
     minioClient.fPutObject(
       bucketName,
-      file.originalname,
-      file.path,
+      newFileName,
+      newFilePath,
       (err: any, etag: any) => {
+        console.error("Error uploading file to MinIO:", err);
         if (err) return reject(err);
 
         // Optionally delete the local file after uploading to MinIO
@@ -16,7 +24,7 @@ const uploadFileToMinIO = (bucketName: string, file: any) => {
           if (unlinkErr) console.log("Error deleting local file:", unlinkErr);
         });
 
-        resolve(etag);
+        resolve(newFileName);
       }
     );
   });

@@ -3,6 +3,6 @@ import express, { Router } from "express";
 
 const router: Router = express.Router();
 router.post("/create-notification", NotificationController.createNotification);
-router.get("", NotificationController.getNotifications);
+router.get("/get-notifications", NotificationController.getNotifications);
 
 export const NotificationRouter = router;

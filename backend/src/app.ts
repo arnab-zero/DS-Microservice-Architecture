@@ -12,10 +12,18 @@ app.use(express.json());
 app.use(cors());
 
 // routers
-app.use("/user", UserRouter);
-app.use("/post", PostRouter);
-app.use("/notification", NotificationRouter);
+app.use("/users", UserRouter);
+app.use("/posts", PostRouter);
+app.use("/notifications", NotificationRouter);
 app.use("/minio-bucket", MinioRouter);
+
+console.log(process.cwd());
+
+export default app;
+
+
+
+
 
 // req.params
 // req.query
@@ -45,7 +53,3 @@ app.use("/minio-bucket", MinioRouter);
 //     data: user,
 //   });
 // });
-
-console.log(process.cwd());
-
-export default app;

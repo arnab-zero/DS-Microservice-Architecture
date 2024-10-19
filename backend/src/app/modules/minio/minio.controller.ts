@@ -7,11 +7,14 @@ const uploadFile = async (req: Request, res: Response) => {
   const file = req.file;
 
   try {
-    const etag = await MinioServices.uploadFileToMinIO(
+    const fileName = await MinioServices.uploadFileToMinIO(
       process.env.MINIO_BUCKET,
       file
     );
-    res.send(`File uploaded successfully to "codebucket". ETag: ${etag}`);
+    res.status(200).json({
+      filename: `${fileName}`,
+      message: `File uploaded successfully to "codebucket".`,
+    });
   } catch (error) {
     console.error("Error uploading file:", error);
     res.status(500).send("Error uploading file to MinIO");
