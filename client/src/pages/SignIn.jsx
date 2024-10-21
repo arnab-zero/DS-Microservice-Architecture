@@ -1,15 +1,17 @@
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const SignIn = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
   const navigate = useNavigate();
 
+  const { authInfo, setAuthInfo } = useContext(AuthContext);
   const [errorMessage, setErrorMessage] = useState("");
-  const [authInfo, setAuthInfo] = useState(null);
+  const [result, setResult] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,19 +25,21 @@ const SignIn = () => {
         email: userData.email,
         password: userData.password,
       });
-      console.log(response.data);
-      setAuthInfo(response);
+      setResult(response.data.data);
+      setErrorMessage(response.data.message);
     } catch (error) {
       console.error("Login failed:", error);
     }
 
     // const authInfo = await response.json();
 
-    if (authInfo) {
-      console.log("User signed in successfully.", authInfo);
+    if (result) {
+      const { _Id: userId, username, email } = result;
+      const userInfo = { userId, username, email };
+      setAuthInfo({ isAuthenticated: true, user: userInfo });
       setErrorMessage("");
-      console.log(authInfo.data.username);
-      navigate("/", { state: { username: authInfo.data.username } });
+      console.log("final: ", userInfo);
+      navigate("/", { state: { username: authInfo.data } });
     } else {
       console.log("Wrong credentials.");
       setErrorMessage("Wrong credentials. Try again.");

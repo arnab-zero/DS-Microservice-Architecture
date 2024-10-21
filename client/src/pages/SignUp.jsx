@@ -8,15 +8,15 @@ const SignUp = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     // Create userData object
     const userData = {
-      email: emailRef.current.value,
       username: usernameRef.current.value,
+      email: emailRef.current.value,
       password: passwordRef.current.value,
     };
 
@@ -30,12 +30,12 @@ const SignUp = () => {
       //   "Password: ",
       //   userData.password
       // );
-      setErrorMessage("All fields are required. Please fill in the form.");
+      setMessage("All fields are required. Please fill in the form.");
       return;
     }
 
     // Clear error message if form is valid
-    setErrorMessage("");
+    setMessage("");
 
     console.log("User Data:", userData);
     // Proceed with submitting userData (e.g., API call)
@@ -57,8 +57,10 @@ const SignUp = () => {
         } else {
           console.error("Failed to send user data. Status:", response);
         }
+        setMessage(response.data.message);
       } catch (error) {
         console.error("Error occurred while signing up user:", error);
+        setMessage(error.message);
       }
     }
 
@@ -112,9 +114,7 @@ const SignUp = () => {
             required
           />
         </div>
-        {errorMessage && (
-          <p className="text-red-500 text-center py-3">{errorMessage}</p>
-        )}
+        {message && <p className="text-red-500 text-center py-3">{message}</p>}
         <div className="form-control mt-6">
           <button className="btn btn-primary bg-[#eaba93] hover:bg-[#d8843f] border-none text-white text-base font-semibold">
             Sign Up

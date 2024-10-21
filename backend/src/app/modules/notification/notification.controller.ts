@@ -11,7 +11,7 @@ const createNotification = (req: Request, res: Response) => {
       message: "Notification saved successfully.",
       data: notification,
     });
-  } catch (err) {
+  } catch (err) { 
     console.log("Error occurred while saving notification info:", err);
   }
 };
