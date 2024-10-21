@@ -1,22 +1,42 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../components/NavBar";
 import { useLocation } from "react-router-dom";
+import axios from "axios";
+import Notification from "../components/Notification";
 
 const Home = () => {
   const postRef = useRef();
   const location = useLocation();
   const { username } = location.state || {};
   const [posts, setPosts] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch("http://localhost:3500/posts/get-posts");
-      if (!response.ok) {
+      const response = await axios.get("http://localhost:3500/posts/get-posts");
+
+      if (response.status === 200) {
+        setPosts(response.data.data);
+      } else {
         throw new Error("HTTP error occurred.");
       }
-      const data = await response.json();
-      setPosts(data);
-      console.log("Posts: ", posts);
+    } catch (err) {
+      console.error("Error occurred: ", err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3500/notifications/get-notifications"
+      );
+
+      if (response.status === 200) {
+        setNotifications(response.data.data);
+        console.log(response.data.data);
+      } else {
+        throw new Error("HTTP error occurred.");
+      }
     } catch (err) {
       console.error("Error occurred: ", err);
     }
@@ -24,7 +44,8 @@ const Home = () => {
 
   useEffect(() => {
     fetchPosts();
-  }, [posts]);
+    fetchNotifications();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -69,10 +90,12 @@ const Home = () => {
             <textarea
               name="post"
               id="post"
-              className="w-[60%] h-[160px] border-2 border-blue-300 rounded-md"
+              className="w-[60%] p-1 h-[160px] border-2 border-blue-300 rounded-md"
               ref={postRef}
               required
             ></textarea>
+            <br />
+            <input type="file" className="mb-2" />
             <br />
             <input
               type="submit"
@@ -86,7 +109,14 @@ const Home = () => {
           <h3 className="mt-5 mb-2 text-black text-lg font-medium">
             Notifications
           </h3>
-          <div>notification</div>
+          <div>
+            {notifications.map((notification) => (
+              <Notification
+                key={notification._id}
+                notification={notification}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

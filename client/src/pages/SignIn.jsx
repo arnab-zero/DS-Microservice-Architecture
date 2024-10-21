@@ -31,7 +31,7 @@ const SignIn = () => {
 
     // const authInfo = await response.json();
 
-    if (authInfo.authSuccess) {
+    if (authInfo) {
       console.log("User signed in successfully.", authInfo);
       setErrorMessage("");
       console.log(authInfo.data.username);

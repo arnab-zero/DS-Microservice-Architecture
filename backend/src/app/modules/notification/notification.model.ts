@@ -2,8 +2,9 @@ import { model, Schema } from "mongoose";
 import { Notification } from "./notification.interface";
 
 const notificationSchema = new Schema<Notification>({
-  notificationDetail: { type: String, required: true },
-  createdAt: { type: Date, required: true },
+  username: { type: String, required: true },
+  postId: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 
 export const NotificationModel = model<Notification>(

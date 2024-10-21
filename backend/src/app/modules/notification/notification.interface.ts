@@ -1,4 +1,5 @@
 export type Notification = {
-  notificationDetail: string;
+  username: string;
+  postId: string;
   createdAt: Date;
 };

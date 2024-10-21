@@ -11,10 +11,10 @@ const createUser = async (req: Request, res: Response) => {
         .status(400)
         .json({ message: "Username, email and password are required." });
     }
-    
+
     const existingAccounts = await UserServices.getUserByEmailOnly({ email });
     if (existingAccounts) {
-      res
+      return res
         .status(400)
         .json({ success: false, message: "This email is already registered." });
     }
