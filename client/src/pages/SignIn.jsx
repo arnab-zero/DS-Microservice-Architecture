@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,7 +11,6 @@ const SignIn = () => {
 
   const { authInfo, setAuthInfo } = useContext(AuthContext);
   const [errorMessage, setErrorMessage] = useState("");
-  const [result, setResult] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,26 +24,35 @@ const SignIn = () => {
         email: userData.email,
         password: userData.password,
       });
-      setResult(response.data.data);
+
+      console.log("Response dot data: ", response.data.data);
       setErrorMessage(response.data.message);
+
+      if (response.data.data) {
+        const { _id: userId, username, email } = response.data.data;
+        const userInfo = { userId, username, email };
+        setAuthInfo({ isAuthenticated: true, user: userInfo }); // Set authentication info
+        setErrorMessage("");
+
+        // Navigate to home only after setting auth info
+        navigate("/"); // Moved the navigate call here to ensure it happens after setting authInfo
+        console.log("final: ", response.data.data);
+      } else {
+        console.log("Wrong credentials.");
+        setErrorMessage("Wrong credentials. Try again.");
+      }
     } catch (error) {
       console.error("Login failed:", error);
     }
-
-    // const authInfo = await response.json();
-
-    if (result) {
-      const { _Id: userId, username, email } = result;
-      const userInfo = { userId, username, email };
-      setAuthInfo({ isAuthenticated: true, user: userInfo });
-      setErrorMessage("");
-      console.log("final: ", userInfo);
-      navigate("/", { state: { username: authInfo.data } });
-    } else {
-      console.log("Wrong credentials.");
-      setErrorMessage("Wrong credentials. Try again.");
-    }
   };
+
+  useEffect(() => {
+    // This effect is no longer needed if you're navigating directly after setting authInfo
+    // if (authInfo?.isAuthenticated) {
+    //   console.log(authInfo.isAuthenticated);
+    //   navigate("/");
+    // }
+  }, [authInfo]);
 
   return (
     <div className="flex justify-center">

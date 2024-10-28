@@ -6,6 +6,8 @@ import { AuthContext } from "../contexts/AuthProvider";
 const PrivateRoute = ({ children }) => {
   const { authInfo } = useContext(AuthContext);
 
+  console.log("from private: ", authInfo);
+
   if (authInfo.isAuthenticated) {
     return children;
   }

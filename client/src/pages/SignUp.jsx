@@ -37,6 +37,8 @@ const SignUp = () => {
     // Clear error message if form is valid
     setMessage("");
 
+    e.target.reset();
+
     console.log("User Data:", userData);
     // Proceed with submitting userData (e.g., API call)
 

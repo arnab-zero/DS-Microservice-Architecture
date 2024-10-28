@@ -1,15 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import NavBar from "../components/NavBar";
-import { useLocation } from "react-router-dom";
 import axios from "axios";
 import Notification from "../components/Notification";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const Home = () => {
   const postRef = useRef();
-  const location = useLocation();
-  const { username } = location.state || {};
   const [posts, setPosts] = useState([]);
+  const [file, setFile] = useState(null);
+  const [pasteVisible, setPasteVisible] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const { authInfo } = useContext(AuthContext);
+  const { userId, username } = authInfo.user;
+
+  console.log("Auth info from home: ", authInfo);
 
   const fetchPosts = async () => {
     try {
@@ -33,7 +37,7 @@ const Home = () => {
 
       if (response.status === 200) {
         setNotifications(response.data.data);
-        console.log(response.data.data);
+        // console.log(response.data.data);
       } else {
         throw new Error("HTTP error occurred.");
       }
@@ -47,35 +51,71 @@ const Home = () => {
     fetchNotifications();
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const post = postRef.current.value;
-    const postData = { username: username, post: post };
-    console.log("Post: ", postData);
-
-    async function sendPostData(postData) {
-      try {
-        const response = await fetch(
-          "http://localhost:3500/posts/create-post",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(postData),
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Post data sent successfully:", data);
-        } else {
-          console.error("Failed to send Post data. Status:", response.status);
+  const sendPostData = async (postData) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3500/posts/create-post",
+        postData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      } catch (err) {
-        console.error("Error occurred:", err);
+      );
+      console.log("Post data sent successfully:", response.data);
+    } catch (err) {
+      if (err.response) {
+        console.error("Failed to send Post data. Status:", err.response.status);
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+      } else {
+        console.error("Error occurred:", err.message);
       }
     }
+  };
+
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
+
+  const uploadFile = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("path", "");
+
+      const response = await axios.post(
+        "http://localhost:3500/minio-bucket/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // console.log("File uploaded successfully:", response.data);
+      // console.log("Response data: ", response.data.filename);
+      return response.data.filename;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const post = postRef.current.value;
+
+    const uploadedFileName = await uploadFile(file);
+
+    const postData = {
+      userId: userId,
+      username: username,
+      postDetail: post,
+      filename: uploadedFileName,
+      createdAt: new Date(),
+    };
+    // console.log("Post: ", postData);
 
     sendPostData(postData);
   };
@@ -85,26 +125,76 @@ const Home = () => {
       <NavBar />
       <div className="grid grid-cols-5">
         <div className="mx-10 mt-4 col-span-3">
+          {/* create post section */}
           <form onSubmit={handleSubmit}>
             <p className="pb-2 text-black text-lg font-medium">Create a post</p>
             <textarea
               name="post"
               id="post"
-              className="w-[60%] p-1 h-[160px] border-2 border-blue-300 rounded-md"
+              className="w-[60%] p-2 h-[160px] border-2 border-blue-300 rounded-md"
               ref={postRef}
+              placeholder="your question/query here"
               required
             ></textarea>
             <br />
-            <input type="file" className="mb-2" />
-            <br />
+            <input
+              type="file"
+              className={`mb-2 ${pasteVisible ? "hidden" : "visible"}`}
+              onChange={handleFileChange}
+            />
+
+            <div className={`mt-2 ${pasteVisible ? "visible" : "hidden"}`}>
+              <textarea
+                name="code-snippet"
+                id="code-snippet"
+                className="w-[60%] p-2 h-[160px] border-2 border-blue-300 rounded-md"
+                placeholder="your code snippet here"
+              ></textarea>
+              <div className="flex gap-2">
+                <input
+                  name="filename"
+                  id="filename"
+                  type="text"
+                  placeholder="filename"
+                  className="border-2 border-blue-400 rounded-md p-1"
+                />
+                <input
+                  name="file-extension"
+                  id="file-extension"
+                  type="text"
+                  placeholder=".ext"
+                  className="border-2 border-blue-400 rounded-md p-1"
+                />
+              </div>
+            </div>
+            <div className="my-2">
+              {pasteVisible ? (
+                <p
+                  className="text-gray-500 cursor-pointer hover:underline"
+                  onClick={() => setPasteVisible(false)}
+                >
+                  Or, upload file from your device
+                </p>
+              ) : (
+                <p
+                  className="text-gray-500 cursor-pointer hover:underline"
+                  onClick={() => setPasteVisible(true)}
+                >
+                  or, paste your code snippet here
+                </p>
+              )}
+            </div>
             <input
               type="submit"
               className="px-2 py-1 bg-blue-300 text-white font-md rounded-lg hover:bg-blue-400 "
             />
           </form>
+          {/* View posts section */}
           <h3 className="mt-5 mb-2 text-black text-lg font-medium">Posts</h3>
           <div>post</div>
         </div>
+
+        {/* Notifications */}
         <div className="col-span-2">
           <h3 className="mt-5 mb-2 text-black text-lg font-medium">
             Notifications
