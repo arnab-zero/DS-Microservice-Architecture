@@ -5,7 +5,7 @@ const postSchema = new Schema<Post>({
   userId: { type: String, required: true },
   username: { type: String, required: true },
   postDetail: { type: String, required: true },
-  filename: { type: String, required: true },
+  filename: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

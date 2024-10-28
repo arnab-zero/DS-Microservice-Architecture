@@ -1,0 +1,18 @@
+
+    const notificationData = {
+      username: username,
+      userId: userId,
+      postId: result.data._id,
+      createdAt: new Date(),
+    };
+
+    createNotification(notificationData)
+
+
+
+
+
+
+
+
+    

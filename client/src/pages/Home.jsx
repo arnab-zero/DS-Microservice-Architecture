@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar";
 import axios from "axios";
 import Notification from "../components/Notification";
 import { AuthContext } from "../contexts/AuthProvider";
+import Post from "../components/Post";
 
 const Home = () => {
   const postRef = useRef();
@@ -13,14 +14,21 @@ const Home = () => {
   const { authInfo } = useContext(AuthContext);
   const { userId, username } = authInfo.user;
 
-  console.log("Auth info from home: ", authInfo);
+  // console.log("Auth info from home: ", authInfo);
 
   const fetchPosts = async () => {
     try {
       const response = await axios.get("http://localhost:3500/posts/get-posts");
 
       if (response.status === 200) {
-        setPosts(response.data.data);
+        // console.log(response.data.data);
+        // console.log("Userid: ", userId);
+        const postsOfOthers = response.data.data.filter(
+          (post) => post.userId !== userId
+        );
+        setPosts(postsOfOthers);
+        // console.log("Posts", posts);
+        // console.log("net posts: ", postsOfOthers);
       } else {
         throw new Error("HTTP error occurred.");
       }
@@ -37,7 +45,7 @@ const Home = () => {
 
       if (response.status === 200) {
         setNotifications(response.data.data);
-        // console.log(response.data.data);
+        console.log(response.data.data);
       } else {
         throw new Error("HTTP error occurred.");
       }
@@ -106,7 +114,7 @@ const Home = () => {
     e.preventDefault();
     const post = postRef.current.value;
 
-    const uploadedFileName = await uploadFile(file);
+    const uploadedFileName = file ? await uploadFile(file) : null;
 
     const postData = {
       userId: userId,
@@ -118,15 +126,17 @@ const Home = () => {
     // console.log("Post: ", postData);
 
     sendPostData(postData);
+
+    e.target.reset();
   };
 
   return (
     <div>
       <NavBar />
       <div className="grid grid-cols-5">
-        <div className="mx-10 mt-4 col-span-3">
+        <div className="mx-10 mt-4 col-span-3 border-r-2 border-gray-400">
           {/* create post section */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="pb-4">
             <p className="pb-2 text-black text-lg font-medium">Create a post</p>
             <textarea
               name="post"
@@ -190,8 +200,16 @@ const Home = () => {
             />
           </form>
           {/* View posts section */}
-          <h3 className="mt-5 mb-2 text-black text-lg font-medium">Posts</h3>
-          <div>post</div>
+          <h3 className="mt-5 mb-2 text-black text-lg font-medium border-t-2 border-gray-400 max-w-[80%] pt-4">
+            Posts
+          </h3>
+          <div className="max-w-[90%]">
+            {posts.length ? (
+              posts.map((post) => <Post key={post._id} post={post} />)
+            ) : (
+              <h3>There is no post to view yet!</h3>
+            )}
+          </div>
         </div>
 
         {/* Notifications */}
