@@ -11,7 +11,17 @@ const getPostsIntoDB = async () => {
   return result;
 };
 
+const getPostById = async (postId: string) => {
+  try {
+    const post = await PostModel.findById(postId).exec();
+    return post;
+  } catch (error) {
+    throw new Error("Error fetching post: " + error);
+  }
+};
+
 export const PostServices = {
   createPostIntoDB,
   getPostsIntoDB,
+  getPostById,
 };

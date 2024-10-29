@@ -18,6 +18,7 @@ const SignUp = () => {
       username: usernameRef.current.value,
       email: emailRef.current.value,
       password: passwordRef.current.value,
+      notificationsRead: [],
     };
 
     // Simple validation

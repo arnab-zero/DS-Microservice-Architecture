@@ -43,10 +43,12 @@ const Post = ({ post }) => {
     }
   };
 
-  getFileContent();
+  if (filename) {
+    getFileContent();
+  }
 
   return (
-    <div className="px-4 py-2 mb-4 border-[2px] border-gray-300 rounded-md">
+    <div className="px-4 py-2 mb-4 border-[2px] border-gray-300 bg-slate-200 rounded-md">
       <h1>
         Posted by <span className="font-medium">{username}</span>
       </h1>

@@ -12,23 +12,20 @@ const Home = () => {
   const [pasteVisible, setPasteVisible] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const { authInfo } = useContext(AuthContext);
-  const { userId, username } = authInfo.user;
+  const { userId, username, notificationsRead } = authInfo.user;
 
-  // console.log("Auth info from home: ", authInfo);
+  const [title, setTitle] = useState("");
+  const [extension, setExtension] = useState("");
+  const [content, setContent] = useState("");
 
   const fetchPosts = async () => {
     try {
       const response = await axios.get("http://localhost:3500/posts/get-posts");
-
       if (response.status === 200) {
-        // console.log(response.data.data);
-        // console.log("Userid: ", userId);
         const postsOfOthers = response.data.data.filter(
           (post) => post.userId !== userId
         );
         setPosts(postsOfOthers);
-        // console.log("Posts", posts);
-        // console.log("net posts: ", postsOfOthers);
       } else {
         throw new Error("HTTP error occurred.");
       }
@@ -42,10 +39,18 @@ const Home = () => {
       const response = await axios.get(
         "http://localhost:3500/notifications/get-notifications"
       );
-
-      if (response.status === 200) {
-        setNotifications(response.data.data);
-        console.log(response.data.data);
+      console.log(response);
+      if (response.data.success) {
+        const selectedNotifications = response.data.data?.filter(
+          (notification) => {
+            return (
+              notification.userId != userId &&
+              !notificationsRead?.includes(notification._id)
+            );
+          }
+        );
+        setNotifications(selectedNotifications);
+        console.log("Oise ni re? ", selectedNotifications);
       } else {
         throw new Error("HTTP error occurred.");
       }
@@ -58,29 +63,6 @@ const Home = () => {
     fetchPosts();
     fetchNotifications();
   }, []);
-
-  const sendPostData = async (postData) => {
-    try {
-      const response = await axios.post(
-        "http://localhost:3500/posts/create-post",
-        postData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log("Post data sent successfully:", response.data);
-    } catch (err) {
-      if (err.response) {
-        console.error("Failed to send Post data. Status:", err.response.status);
-      } else if (err.request) {
-        console.error("No response received:", err.request);
-      } else {
-        console.error("Error occurred:", err.message);
-      }
-    }
-  };
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -102,12 +84,95 @@ const Home = () => {
         }
       );
 
-      // console.log("File uploaded successfully:", response.data);
-      // console.log("Response data: ", response.data.filename);
       return response.data.filename;
     } catch (error) {
       console.error("Error uploading file:", error);
     }
+  };
+
+  const sendPostData = async (postData) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3500/posts/create-post",
+        postData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Post data sent successfully:", response.data);
+      return response.data;
+    } catch (err) {
+      if (err.response) {
+        console.error("Failed to send Post data. Status:", err.response.status);
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+      } else {
+        console.error("Error occurred:", err.message);
+      }
+    }
+  };
+
+  // New function to send notification data
+  const sendNotification = async (notificationData) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3500/notifications/create-notification",
+        notificationData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Notification sent successfully:", response.data);
+    } catch (err) {
+      console.error("Failed to send notification:", err);
+    }
+  };
+
+  const handlePastedFileSubmit = async (e) => {
+    e.preventDefault();
+
+    const fileName = `${title}${extension}`;
+
+    // Create a Blob from the content
+    const blob = new Blob([content], { type: "text/plain" });
+
+    // Create a FormData object to send the file
+    const formData = new FormData();
+    formData.append("file", blob, fileName); // Append the blob with the desired filename
+
+    // Upload the file to MinIO using the uploadFile function
+    const uploadedFileName = await uploadFile(formData.get("file")); // Get the file from FormData
+
+    const post = postRef.current.value;
+
+    // Prepare post data
+    const postData = {
+      userId: userId,
+      username: username,
+      postDetail: post,
+      filename: uploadedFileName, // This will contain the filename returned from uploadFile
+      createdAt: new Date(),
+    };
+
+    // Send the post data to your backend
+    const result = await sendPostData(postData);
+
+    // Check if post was created successfully before creating notification
+    if (result && result.data) {
+      const notificationData = {
+        username: username,
+        userId: userId,
+        postId: result.data._id,
+        createdAt: result.data.createdAt,
+      };
+      await sendNotification(notificationData); // Send notification
+    }
+
+    e.target.reset();
   };
 
   const handleSubmit = async (e) => {
@@ -123,9 +188,19 @@ const Home = () => {
       filename: uploadedFileName,
       createdAt: new Date(),
     };
-    // console.log("Post: ", postData);
 
-    sendPostData(postData);
+    const result = await sendPostData(postData);
+
+    // Check if post was created successfully before creating notification
+    if (result && result.data) {
+      const notificationData = {
+        username: username,
+        userId: userId,
+        postId: result.data._id,
+        createdAt: result.data.createdAt,
+      };
+      await sendNotification(notificationData); // Send notification
+    }
 
     e.target.reset();
   };
@@ -136,8 +211,11 @@ const Home = () => {
       <div className="grid grid-cols-5">
         <div className="mx-10 mt-4 col-span-3 border-r-2 border-gray-400">
           {/* create post section */}
-          <form onSubmit={handleSubmit} className="pb-4">
-            <p className="pb-2 text-black text-lg font-medium">Create a post</p>
+          <form
+            onSubmit={pasteVisible ? handlePastedFileSubmit : handleSubmit}
+            className="pb-4"
+          >
+            <p className="mb-3 text-black text-lg font-medium">Create a post</p>
             <textarea
               name="post"
               id="post"
@@ -159,6 +237,8 @@ const Home = () => {
                 id="code-snippet"
                 className="w-[60%] p-2 h-[160px] border-2 border-blue-300 rounded-md"
                 placeholder="your code snippet here"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
               ></textarea>
               <div className="flex gap-2">
                 <input
@@ -167,6 +247,8 @@ const Home = () => {
                   type="text"
                   placeholder="filename"
                   className="border-2 border-blue-400 rounded-md p-1"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
                 <input
                   name="file-extension"
@@ -174,6 +256,8 @@ const Home = () => {
                   type="text"
                   placeholder=".ext"
                   className="border-2 border-blue-400 rounded-md p-1"
+                  value={extension}
+                  onChange={(e) => setExtension(e.target.value)}
                 />
               </div>
             </div>
@@ -213,8 +297,8 @@ const Home = () => {
         </div>
 
         {/* Notifications */}
-        <div className="col-span-2">
-          <h3 className="mt-5 mb-2 text-black text-lg font-medium">
+        <div className="col-span-2 mr-8">
+          <h3 className="mt-5 mb-4 text-black text-lg font-medium">
             Notifications
           </h3>
           <div>

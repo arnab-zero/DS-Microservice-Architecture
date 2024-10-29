@@ -53,7 +53,34 @@ const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+const updateNotificationsReadController = async (
+  req: Request,
+  res: Response
+) => {
+  const { userId } = req.params; // Extract userId from request parameters
+  const { notificationId } = req.body; // Extract notificationId from request body
+
+  try {
+    const updatedUser = await UserServices.updateNotificationsReadService(
+      userId,
+      notificationId
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser); // Send the updated user back in response
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating user notifications",
+      error: error,
+    });
+  }
+};
+
 export const UserControllers = {
   createUser,
   getUsers,
+  updateNotificationsReadController,
 };
