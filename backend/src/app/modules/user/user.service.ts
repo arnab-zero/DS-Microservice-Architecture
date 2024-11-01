@@ -24,7 +24,7 @@ const updateNotificationsReadService = async (
   try {
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
-      { $addToSet: { notificationsRead: notificationId } }, // Add notificationId if it doesn't exist
+      { $addToSet: { notifications: notificationId } }, // Add notificationId if it doesn't exist
       { new: true } // Return the updated document
     );
 

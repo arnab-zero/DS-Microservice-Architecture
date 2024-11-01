@@ -8,10 +8,8 @@ const Notification = ({ notification }) => {
   const { username, createdAt, postId, _id: notificationId } = notification; // Added notification ID
   const [showPopup, setShowPopup] = useState(false);
   const [postDetails, setPostDetails] = useState(null);
-  const { authInfo, setAuthInfo } = useContext(AuthContext);
-  const { userId } = authInfo;
-
-  // console.log("User id:", authInfo.user.userId);
+  const { authInfo } = useContext(AuthContext);
+  // const { userId } = authInfo;
 
   const handleViewClick = async () => {
     try {
@@ -27,13 +25,13 @@ const Notification = ({ notification }) => {
     }
   };
 
-  // Updated handleMarkAsRead to properly send notificationId
+  console.log("Userid: ", authInfo.user.userId);
+
   const handleMarkAsRead = async () => {
     try {
-      // Prepare the payload to include notificationId
       const response = await axios.put(
-        `http://localhost:3500/users/${authInfo.user.userId}`, // Updated endpoint to include notifications
-        { notificationId } // Send notificationId as part of the request body
+        `http://localhost:3500/users/${authInfo.user.userId}`,
+        { notificationId }
       );
 
       console.log("Updated user notifications:", response.data);
@@ -58,7 +56,7 @@ const Notification = ({ notification }) => {
         View it.
       </span>
       <div
-        className="font-light hover:underline cursor-pointer py-1"
+        className="font-light hover:underline cursor-pointer py-1 w-fit"
         onClick={handleMarkAsRead} // Updated to call handleMarkAsRead directly
       >
         Mark as read
